@@ -16,77 +16,70 @@
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
+            padding-bottom: 100px; /* Espacio extra al final para poder hacer scroll cómodo */
         }
         h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
         
         .btn-scan {
-            background-color: #007aff;
-            color: white;
-            border: none;
-            padding: 15px 20px;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            width: 100%;
-            max-width: 300px;
-            margin-bottom: 20px;
-            cursor: pointer;
+            background-color: #007aff; color: white; border: none; padding: 15px 20px;
+            border-radius: 10px; font-size: 18px; font-weight: 600; width: 100%;
+            max-width: 300px; margin-bottom: 20px; cursor: pointer;
             box-shadow: 0 2px 5px rgba(0,122,255,0.3);
         }
         .btn-scan:active { background-color: #005bb5; }
 
-        #reader {
-            width: 100%;
-            max-width: 300px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            display: none;
+        .btn-save {
+            background-color: #34c759; /* Verde de Apple */ color: white; border: none; 
+            padding: 12px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; 
+            width: 100%; max-width: 300px; margin-top: 10px; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(52,199,89,0.3); display: none; /* Oculto por defecto */
         }
+        .btn-save:active { background-color: #248a3d; }
 
-        /* Restaurado el tamaño del cajetín */
+        #reader { width: 100%; max-width: 300px; border-radius: 10px; overflow: hidden; margin-bottom: 20px; display: none; }
+
         input {
             width: 100%; max-width: 300px; padding: 15px; font-size: 20px;
-            border: 1px solid #ccc; border-radius: 10px;
-            text-align: center; margin-bottom: 10px; outline: none;
-            box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 10px; text-align: center; 
+            margin-bottom: 10px; outline: none; box-sizing: border-box;
         }
         input:focus { border-color: #007aff; }
-        
-        .mensaje {
-            color: #ff3b30;
-            font-size: 14px; 
-            min-height: 20px; 
-            margin-bottom: 20px;
-            font-weight: 500;
+
+        /* Estilo para el input del texto descriptivo */
+        #inputDescripcion {
+            font-size: 16px; text-align: left; display: none; /* Oculto por defecto */
         }
+        
+        .mensaje { color: #ff3b30; font-size: 14px; min-height: 20px; margin-bottom: 20px; font-weight: 500; }
         
         .barcode-container {
-            background: white; padding: 20px; border-radius: 15px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             width: 100%; max-width: 300px; display: flex; justify-content: center; align-items: center;
-            min-height: 120px; box-sizing: border-box;
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            min-height: 120px; box-sizing: border-box; transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
+        .barcode-container.zoomed { transform: scale(1.4); box-shadow: 0 10px 25px rgba(0,0,0,0.15); z-index: 10; }
 
-        .barcode-container.zoomed {
-            transform: scale(1.4);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
-
-        .hint {
-            font-size: 12px;
-            color: #8e8e93;
-            margin-top: 15px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .hint.visible {
-            opacity: 1;
-        }
+        .hint { font-size: 12px; color: #8e8e93; margin-top: 15px; opacity: 0; transition: opacity 0.3s; }
+        .hint.visible { opacity: 1; }
 
         svg { max-width: 100%; height: auto; }
+
+        /* ===== ESTILOS PARA LA LISTA DE GUARDADOS ===== */
+        .seccion-guardados {
+            width: 100%; max-width: 300px; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px;
+        }
+        .seccion-guardados h2 { font-size: 18px; color: #333; margin-bottom: 15px; }
+        
+        .item-guardado {
+            background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
+        }
+        .item-datos { display: flex; flex-direction: column; cursor: pointer; flex-grow: 1; }
+        .item-nombre { font-weight: 600; font-size: 16px; color: #111; margin-bottom: 4px; }
+        .item-numero { font-size: 14px; color: #007aff; font-family: monospace; }
+        .btn-delete {
+            background: none; border: none; color: #ff3b30; font-size: 20px; padding: 10px; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -97,14 +90,20 @@
     <div id="reader"></div>
     
     <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
-    
     <div id="mensajeError" class="mensaje"></div>
     
     <div class="barcode-container" id="contenedorBarras">
         <svg id="codigoBarras"></svg>
     </div>
-
     <div id="textoAyuda" class="hint">Puedes pellizcar para hacer zoom</div>
+
+    <input type="text" id="inputDescripcion" placeholder="Nombre (ej: Palé Agua)..." maxlength="30">
+    <button id="btnGuardar" class="btn-save">💾 Guardar Etiqueta</button>
+
+    <div class="seccion-guardados" id="seccionGuardados" style="display: none;">
+        <h2>Etiquetas Guardadas</h2>
+        <div id="listaGuardados"></div>
+    </div>
 
     <script>
         const input = document.getElementById('inputNumeros');
@@ -114,6 +113,17 @@
         const textoAyuda = document.getElementById('textoAyuda');
         const btnScan = document.getElementById('btnScan');
         const readerDiv = document.getElementById('reader');
+        
+        const inputDescripcion = document.getElementById('inputDescripcion');
+        const btnGuardar = document.getElementById('btnGuardar');
+        const seccionGuardados = document.getElementById('seccionGuardados');
+        const listaGuardados = document.getElementById('listaGuardados');
+
+        // Cargar etiquetas guardadas desde la memoria del móvil
+        let etiquetasGuardadas = JSON.parse(localStorage.getItem('misEtiquetas')) || [];
+
+        // Renderizar la lista al iniciar
+        renderizarLista();
 
         contenedor.addEventListener('click', function() {
             if (input.value.length === 10) {
@@ -127,13 +137,19 @@
 
             if (texto.length < 10) {
                 contenedor.classList.remove('zoomed');
+                inputDescripcion.style.display = "none";
+                btnGuardar.style.display = "none";
             }
 
             if (texto.length === 10) {
                 mensajeError.innerText = '';
                 textoAyuda.classList.add('visible');
+                
+                // Mostrar opciones para guardar
+                inputDescripcion.style.display = "block";
+                btnGuardar.style.display = "block";
+
                 try {
-                    // AQUÍ ESTÁ EL FNC1 (\xCF) Y EL TAMAÑO 18 ORIGINAL RESTAURADO
                     JsBarcode("#codigoBarras", "\xCF" + texto, {
                         format: "CODE128", 
                         text: texto, 
@@ -141,7 +157,7 @@
                         width: 2,
                         height: 80,
                         displayValue: true,
-                        fontSize: 18 // He devuelto esto a 18 para que el grosor coincida
+                        fontSize: 18
                     });
                 } catch (e) {
                     console.error("Error al generar el código");
@@ -161,6 +177,82 @@
 
         input.addEventListener('input', actualizarCodigo);
 
+        // --- LÓGICA DE GUARDADO ---
+        
+        btnGuardar.addEventListener('click', () => {
+            const numero = input.value;
+            let nombre = inputDescripcion.value.trim();
+            
+            // Si el usuario no escribe nombre, le ponemos uno por defecto
+            if (nombre === "") {
+                nombre = "Etiqueta sin nombre";
+            }
+
+            // Comprobar si ese número ya está guardado para no duplicarlo
+            const existe = etiquetasGuardadas.find(e => e.numero === numero);
+            if (existe) {
+                alert("Este número ya está en tu lista de guardados.");
+                return;
+            }
+
+            // Añadir a la lista
+            etiquetasGuardadas.push({ numero: numero, nombre: nombre });
+            
+            // Guardar en la memoria del iPhone
+            localStorage.setItem('misEtiquetas', JSON.stringify(etiquetasGuardadas));
+            
+            // Limpiar la descripción y actualizar la vista
+            inputDescripcion.value = "";
+            renderizarLista();
+            
+            // Pequeño feedback visual
+            btnGuardar.innerText = "¡Guardado! ✅";
+            setTimeout(() => { btnGuardar.innerText = "💾 Guardar Etiqueta"; }, 2000);
+        });
+
+        function renderizarLista() {
+            listaGuardados.innerHTML = "";
+            
+            if (etiquetasGuardadas.length === 0) {
+                seccionGuardados.style.display = "none";
+                return;
+            }
+            
+            seccionGuardados.style.display = "block";
+
+            etiquetasGuardadas.forEach((etiqueta, index) => {
+                const div = document.createElement('div');
+                div.className = "item-guardado";
+                
+                div.innerHTML = `
+                    <div class="item-datos" onclick="cargarEtiqueta('${etiqueta.numero}')">
+                        <div class="item-nombre">${etiqueta.nombre}</div>
+                        <div class="item-numero">${etiqueta.numero}</div>
+                    </div>
+                    <button class="btn-delete" onclick="borrarEtiqueta(${index})">🗑️</button>
+                `;
+                listaGuardados.appendChild(div);
+            });
+        }
+
+        // Función global para cargar un número guardado al tocarlo
+        window.cargarEtiqueta = function(numero) {
+            input.value = numero;
+            // Desplazar la pantalla hacia arriba
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            actualizarCodigo();
+        };
+
+        // Función global para borrar de la lista
+        window.borrarEtiqueta = function(index) {
+            if(confirm("¿Seguro que quieres borrar esta etiqueta?")) {
+                etiquetasGuardadas.splice(index, 1);
+                localStorage.setItem('misEtiquetas', JSON.stringify(etiquetasGuardadas));
+                renderizarLista();
+            }
+        };
+
+        // --- LÓGICA DE ESCÁNER DE CÁMARA ---
         let html5QrCode;
 
         btnScan.addEventListener('click', () => {
@@ -179,10 +271,7 @@
                 
                 html5QrCode.start(
                     { facingMode: "environment" }, 
-                    {
-                        fps: 10, 
-                        qrbox: { width: 250, height: 100 } 
-                    },
+                    { fps: 10, qrbox: { width: 250, height: 100 } },
                     (decodedText, decodedResult) => {
                         html5QrCode.stop().then(() => {
                             readerDiv.style.display = "none";
@@ -190,8 +279,6 @@
                             btnScan.style.backgroundColor = "#007aff";
                             
                             let numerosExtraidos = decodedText.replace(/[^0-9]/g, '');
-                            
-                            // Tijeras restauradas: coge solo los primeros 10 números
                             if(numerosExtraidos.length > 10) {
                                 numerosExtraidos = numerosExtraidos.substring(0, 10);
                             }
@@ -200,8 +287,7 @@
                             actualizarCodigo();
                         });
                     },
-                    (errorMessage) => {
-                    }
+                    (errorMessage) => {}
                 ).catch((err) => {
                     alert("No se pudo acceder a la cámara. Asegúrate de darle permisos a Safari.");
                     readerDiv.style.display = "none";
