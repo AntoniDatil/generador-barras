@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Generador</title>
@@ -13,14 +13,14 @@
     
     <style>
         /* =========================================
-           TU CSS ORIGINAL INTACTO
+           TU CSS ORIGINAL INTACTO (Modificado solo overflow)
            ========================================= */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
-            overflow-x: hidden;
+            /* Se ha eliminado overflow-x: hidden; para que puedas moverte al hacer zoom */
         }
         h1 { font-size: 24px; color: #333; margin-bottom: 30px; text-align: center; }
         input {
@@ -101,7 +101,7 @@
         <svg id="codigoBarras"></svg>
     </div>
 
-    <div id="textoAyuda" class="hint">Toca el código para ampliarlo</div>
+    <div id="textoAyuda" class="hint">Puedes pellizcar para hacer zoom</div>
 
     <input type="text" id="inputDescripcion" placeholder="Nombre (ej: Palé Agua)..." maxlength="30">
     <button id="btnGuardar" class="btn-save">💾 Guardar Etiqueta</button>
