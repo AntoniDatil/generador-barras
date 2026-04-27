@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Códigos</title>
+    <title>Generador</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
@@ -15,7 +15,7 @@
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
-            overflow-x: hidden; /* Evita que la pantalla se mueva a los lados al hacer zoom */
+            overflow-x: hidden;
         }
         h1 { font-size: 24px; color: #333; margin-bottom: 30px; text-align: center; }
         input {
@@ -33,25 +33,20 @@
             font-weight: 500;
         }
         
-        /* Contenedor del código de barras */
         .barcode-container {
             background: white; padding: 20px; border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
             width: 100%; max-width: 300px; display: flex; justify-content: center; align-items: center;
             min-height: 120px; box-sizing: border-box;
-            
-            /* Animación suave para el zoom */
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
 
-        /* Clase que se activa al tocar el código para hacer el zoom */
         .barcode-container.zoomed {
-            transform: scale(1.4); /* Aumenta el tamaño un 40% */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15); /* Sombra más grande para dar efecto 3D */
+            transform: scale(1.4);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             z-index: 10;
         }
 
-        /* Texto de ayuda para el zoom */
         .hint {
             font-size: 12px;
             color: #8e8e93;
@@ -68,7 +63,7 @@
 </head>
 <body>
 
-    <h1>Generador (10 dígitos)</h1>
+    <h1>Generador Code 128</h1>
     
     <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
     
@@ -81,7 +76,7 @@
     <div id="textoAyuda" class="hint">Toca el código para ampliarlo</div>
 
     <script>
-        const miPin = "1234"; 
+        const miPin = "1234"; // Tu PIN de seguridad
         let intento = prompt("Introduce el PIN para usar la app:");
         
         if (intento !== miPin) {
@@ -93,9 +88,7 @@
             const contenedor = document.getElementById('contenedorBarras');
             const textoAyuda = document.getElementById('textoAyuda');
 
-            // Lógica para hacer zoom al tocar el contenedor
             contenedor.addEventListener('click', function() {
-                // Solo hace zoom si hay un código generado (si el texto tiene 10 números)
                 if (input.value.length === 10) {
                     this.classList.toggle('zoomed');
                 }
@@ -105,15 +98,15 @@
                 this.value = this.value.replace(/[^0-9]/g, '');
                 const texto = this.value;
 
-                // Si borras un número mientras está el zoom activado, quitamos el zoom
                 if (texto.length < 10) {
                     contenedor.classList.remove('zoomed');
                 }
 
                 if (texto.length === 10) {
                     mensajeError.innerText = '';
-                    textoAyuda.classList.add('visible'); // Mostramos el texto "Toca para ampliar"
+                    textoAyuda.classList.add('visible');
                     try {
+                        // Generación estricta en formato Code 128
                         JsBarcode("#codigoBarras", texto, {
                             format: "CODE128", 
                             lineColor: "#000",
@@ -127,7 +120,7 @@
                     }
                 } else {
                     svgElement.innerHTML = '';
-                    textoAyuda.classList.remove('visible'); // Ocultamos el texto
+                    textoAyuda.classList.remove('visible');
                     
                     if (texto.length > 0) {
                         const faltan = 10 - texto.length;
