@@ -16,7 +16,7 @@
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
-            padding-bottom: 100px; /* Espacio extra al final para poder hacer scroll cómodo */
+            padding-bottom: 100px;
         }
         h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
         
@@ -29,10 +29,10 @@
         .btn-scan:active { background-color: #005bb5; }
 
         .btn-save {
-            background-color: #34c759; /* Verde de Apple */ color: white; border: none; 
+            background-color: #34c759; color: white; border: none; 
             padding: 12px 20px; border-radius: 10px; font-size: 16px; font-weight: 600; 
             width: 100%; max-width: 300px; margin-top: 10px; cursor: pointer;
-            box-shadow: 0 2px 5px rgba(52,199,89,0.3); display: none; /* Oculto por defecto */
+            box-shadow: 0 2px 5px rgba(52,199,89,0.3); display: none;
         }
         .btn-save:active { background-color: #248a3d; }
 
@@ -45,10 +45,7 @@
         }
         input:focus { border-color: #007aff; }
 
-        /* Estilo para el input del texto descriptivo */
-        #inputDescripcion {
-            font-size: 16px; text-align: left; display: none; /* Oculto por defecto */
-        }
+        #inputDescripcion { font-size: 16px; text-align: left; display: none; }
         
         .mensaje { color: #ff3b30; font-size: 14px; min-height: 20px; margin-bottom: 20px; font-weight: 500; }
         
@@ -64,10 +61,7 @@
 
         svg { max-width: 100%; height: auto; }
 
-        /* ===== ESTILOS PARA LA LISTA DE GUARDADOS ===== */
-        .seccion-guardados {
-            width: 100%; max-width: 300px; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px;
-        }
+        .seccion-guardados { width: 100%; max-width: 300px; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; }
         .seccion-guardados h2 { font-size: 18px; color: #333; margin-bottom: 15px; }
         
         .item-guardado {
@@ -77,9 +71,7 @@
         .item-datos { display: flex; flex-direction: column; cursor: pointer; flex-grow: 1; }
         .item-nombre { font-weight: 600; font-size: 16px; color: #111; margin-bottom: 4px; }
         .item-numero { font-size: 14px; color: #007aff; font-family: monospace; }
-        .btn-delete {
-            background: none; border: none; color: #ff3b30; font-size: 20px; padding: 10px; cursor: pointer;
-        }
+        .btn-delete { background: none; border: none; color: #ff3b30; font-size: 20px; padding: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -119,10 +111,8 @@
         const seccionGuardados = document.getElementById('seccionGuardados');
         const listaGuardados = document.getElementById('listaGuardados');
 
-        // Cargar etiquetas guardadas desde la memoria del móvil
         let etiquetasGuardadas = JSON.parse(localStorage.getItem('misEtiquetas')) || [];
 
-        // Renderizar la lista al iniciar
         renderizarLista();
 
         contenedor.addEventListener('click', function() {
@@ -145,16 +135,16 @@
                 mensajeError.innerText = '';
                 textoAyuda.classList.add('visible');
                 
-                // Mostrar opciones para guardar
                 inputDescripcion.style.display = "block";
                 btnGuardar.style.display = "block";
 
                 try {
+                    // AQUÍ ESTÁ DE VUELTA EL FNC1 (\xCF) Y EL FORMATO CODE128
                     JsBarcode("#codigoBarras", "\xCF" + texto, {
                         format: "CODE128", 
-                        text: texto, 
+                        text: texto, // Obligamos a que abajo solo salgan tus 10 números limpios
                         lineColor: "#000",
-                        width: 2,
+                        width: 2, 
                         height: 80,
                         displayValue: true,
                         fontSize: 18
@@ -176,36 +166,25 @@
         }
 
         input.addEventListener('input', actualizarCodigo);
-
-        // --- LÓGICA DE GUARDADO ---
         
         btnGuardar.addEventListener('click', () => {
             const numero = input.value;
             let nombre = inputDescripcion.value.trim();
             
-            // Si el usuario no escribe nombre, le ponemos uno por defecto
-            if (nombre === "") {
-                nombre = "Etiqueta sin nombre";
-            }
+            if (nombre === "") nombre = "Etiqueta sin nombre";
 
-            // Comprobar si ese número ya está guardado para no duplicarlo
             const existe = etiquetasGuardadas.find(e => e.numero === numero);
             if (existe) {
                 alert("Este número ya está en tu lista de guardados.");
                 return;
             }
 
-            // Añadir a la lista
             etiquetasGuardadas.push({ numero: numero, nombre: nombre });
-            
-            // Guardar en la memoria del iPhone
             localStorage.setItem('misEtiquetas', JSON.stringify(etiquetasGuardadas));
             
-            // Limpiar la descripción y actualizar la vista
             inputDescripcion.value = "";
             renderizarLista();
             
-            // Pequeño feedback visual
             btnGuardar.innerText = "¡Guardado! ✅";
             setTimeout(() => { btnGuardar.innerText = "💾 Guardar Etiqueta"; }, 2000);
         });
@@ -235,15 +214,12 @@
             });
         }
 
-        // Función global para cargar un número guardado al tocarlo
         window.cargarEtiqueta = function(numero) {
             input.value = numero;
-            // Desplazar la pantalla hacia arriba
             window.scrollTo({ top: 0, behavior: 'smooth' });
             actualizarCodigo();
         };
 
-        // Función global para borrar de la lista
         window.borrarEtiqueta = function(index) {
             if(confirm("¿Seguro que quieres borrar esta etiqueta?")) {
                 etiquetasGuardadas.splice(index, 1);
@@ -252,7 +228,6 @@
             }
         };
 
-        // --- LÓGICA DE ESCÁNER DE CÁMARA ---
         let html5QrCode;
 
         btnScan.addEventListener('click', () => {
