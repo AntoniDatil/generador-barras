@@ -63,7 +63,7 @@
 </head>
 <body>
 
-    <h1>Generador Code 128</h1>
+    <h1>Generador GS1-128</h1>
     
     <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
     
@@ -106,9 +106,12 @@
                     mensajeError.innerText = '';
                     textoAyuda.classList.add('visible');
                     try {
-                        // Generación estricta en formato Code 128
-                        JsBarcode("#codigoBarras", texto, {
-                            format: "ITF", 
+                        // AQUÍ ESTÁ LA MAGIA:
+                        // 1. Añadimos el FNC1 (\xCF) al principio del texto
+                        // 2. Usamos la propiedad text: texto para que abajo no salga el símbolo raro
+                        JsBarcode("#codigoBarras", "\xCF" + texto, {
+                            format: "CODE128", 
+                            text: texto, 
                             lineColor: "#000",
                             width: 2,
                             height: 80,
