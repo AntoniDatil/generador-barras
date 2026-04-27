@@ -2,12 +2,13 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Generador</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     
     <style>
         body {
@@ -15,13 +16,40 @@
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
-            overflow-x: hidden;
+            /* He eliminado overflow-x: hidden; para que puedas mover la pantalla a los lados al hacer zoom */
         }
-        h1 { font-size: 24px; color: #333; margin-bottom: 30px; text-align: center; }
+        h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
+        
+        .btn-scan {
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,122,255,0.3);
+        }
+        .btn-scan:active { background-color: #005bb5; }
+
+        #reader {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            display: none;
+        }
+
         input {
             width: 100%; max-width: 300px; padding: 15px; font-size: 20px;
             border: 1px solid #ccc; border-radius: 10px;
             text-align: center; margin-bottom: 10px; outline: none;
+            box-sizing: border-box;
         }
         input:focus { border-color: #007aff; }
         
@@ -65,6 +93,9 @@
 
     <h1>Generador GS1-128</h1>
     
+    <button id="btnScan" class="btn-scan">📷 Escanear Código</button>
+    <div id="reader"></div>
+    
     <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
     
     <div id="mensajeError" class="mensaje"></div>
@@ -73,67 +104,110 @@
         <svg id="codigoBarras"></svg>
     </div>
 
-    <div id="textoAyuda" class="hint">Toca el código para ampliarlo</div>
+    <div id="textoAyuda" class="hint">Puedes pellizcar para hacer zoom</div>
 
     <script>
-        const miPin = "1234"; // Tu PIN de seguridad
-        let intento = prompt("Introduce el PIN para usar la app:");
-        
-        if (intento !== miPin) {
-            document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px;'>Acceso Denegado</h2>";
-        } else {
-            const input = document.getElementById('inputNumeros');
-            const svgElement = document.getElementById('codigoBarras');
-            const mensajeError = document.getElementById('mensajeError');
-            const contenedor = document.getElementById('contenedorBarras');
-            const textoAyuda = document.getElementById('textoAyuda');
+        const input = document.getElementById('inputNumeros');
+        const svgElement = document.getElementById('codigoBarras');
+        const mensajeError = document.getElementById('mensajeError');
+        const contenedor = document.getElementById('contenedorBarras');
+        const textoAyuda = document.getElementById('textoAyuda');
+        const btnScan = document.getElementById('btnScan');
+        const readerDiv = document.getElementById('reader');
 
-            contenedor.addEventListener('click', function() {
-                if (input.value.length === 10) {
-                    this.classList.toggle('zoomed');
+        contenedor.addEventListener('click', function() {
+            if (input.value.length === 10) {
+                this.classList.toggle('zoomed');
+            }
+        });
+
+        function actualizarCodigo() {
+            input.value = input.value.replace(/[^0-9]/g, ''); 
+            const texto = input.value;
+
+            if (texto.length < 10) {
+                contenedor.classList.remove('zoomed');
+            }
+
+            if (texto.length === 10) {
+                mensajeError.innerText = '';
+                textoAyuda.classList.add('visible');
+                try {
+                    JsBarcode("#codigoBarras", "\xCF" + texto, {
+                        format: "CODE128", 
+                        text: texto, 
+                        lineColor: "#000",
+                        width: 2,
+                        height: 80,
+                        displayValue: true,
+                        fontSize: 18
+                    });
+                } catch (e) {
+                    console.error("Error al generar el código");
                 }
-            });
-
-            input.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-                const texto = this.value;
-
-                if (texto.length < 10) {
-                    contenedor.classList.remove('zoomed');
-                }
-
-                if (texto.length === 10) {
-                    mensajeError.innerText = '';
-                    textoAyuda.classList.add('visible');
-                    try {
-                        // AQUÍ ESTÁ LA MAGIA:
-                        // 1. Añadimos el FNC1 (\xCF) al principio del texto
-                        // 2. Usamos la propiedad text: texto para que abajo no salga el símbolo raro
-                        JsBarcode("#codigoBarras", "\xCF" + texto, {
-                            format: "CODE128", 
-                            text: texto, 
-                            lineColor: "#000",
-                            width: 2,
-                            height: 80,
-                            displayValue: true,
-                            fontSize: 18
-                        });
-                    } catch (e) {
-                        console.error("Error al generar el código");
-                    }
+            } else {
+                svgElement.innerHTML = '';
+                textoAyuda.classList.remove('visible');
+                
+                if (texto.length > 0) {
+                    const faltan = 10 - texto.length;
+                    mensajeError.innerText = `Faltan ${faltan} números`;
                 } else {
-                    svgElement.innerHTML = '';
-                    textoAyuda.classList.remove('visible');
-                    
-                    if (texto.length > 0) {
-                        const faltan = 10 - texto.length;
-                        mensajeError.innerText = `Faltan ${faltan} números`;
-                    } else {
-                        mensajeError.innerText = ''; 
-                    }
+                    mensajeError.innerText = ''; 
                 }
-            });
+            }
         }
+
+        input.addEventListener('input', actualizarCodigo);
+
+        let html5QrCode;
+
+        btnScan.addEventListener('click', () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    readerDiv.style.display = "none";
+                    btnScan.innerText = "📷 Escanear Código";
+                    btnScan.style.backgroundColor = "#007aff";
+                });
+            } else {
+                readerDiv.style.display = "block";
+                btnScan.innerText = "Detener Cámara";
+                btnScan.style.backgroundColor = "#ff3b30";
+                
+                html5QrCode = new Html5Qrcode("reader");
+                
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    {
+                        fps: 10, 
+                        qrbox: { width: 250, height: 100 } 
+                    },
+                    (decodedText, decodedResult) => {
+                        html5QrCode.stop().then(() => {
+                            readerDiv.style.display = "none";
+                            btnScan.innerText = "📷 Escanear Código";
+                            btnScan.style.backgroundColor = "#007aff";
+                            
+                            let numerosExtraidos = decodedText.replace(/[^0-9]/g, '');
+                            
+                            if(numerosExtraidos.length > 10) {
+                                numerosExtraidos = numerosExtraidos.substring(0, 10);
+                            }
+                            
+                            input.value = numerosExtraidos;
+                            actualizarCodigo();
+                        });
+                    },
+                    (errorMessage) => {
+                    }
+                ).catch((err) => {
+                    alert("No se pudo acceder a la cámara. Asegúrate de darle permisos a Safari.");
+                    readerDiv.style.display = "none";
+                    btnScan.innerText = "📷 Escanear Código";
+                    btnScan.style.backgroundColor = "#007aff";
+                });
+            }
+        });
     </script>
 </body>
 </html>
