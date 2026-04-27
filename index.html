@@ -16,7 +16,6 @@
             background-color: #f2f2f7;
             display: flex; flex-direction: column; align-items: center;
             padding: 50px 20px; margin: 0;
-            /* He eliminado overflow-x: hidden; para que puedas mover la pantalla a los lados al hacer zoom */
         }
         h1 { font-size: 24px; color: #333; margin-bottom: 20px; text-align: center; }
         
@@ -45,8 +44,9 @@
             display: none;
         }
 
+        /* He quitado el límite visual de la caja para que quepan todos los números si es largo */
         input {
-            width: 100%; max-width: 300px; padding: 15px; font-size: 20px;
+            width: 100%; max-width: 300px; padding: 15px; font-size: 16px;
             border: 1px solid #ccc; border-radius: 10px;
             text-align: center; margin-bottom: 10px; outline: none;
             box-sizing: border-box;
@@ -96,7 +96,7 @@
     <button id="btnScan" class="btn-scan">📷 Escanear Código</button>
     <div id="reader"></div>
     
-    <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
+    <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*">
     
     <div id="mensajeError" class="mensaje"></div>
     
@@ -116,7 +116,8 @@
         const readerDiv = document.getElementById('reader');
 
         contenedor.addEventListener('click', function() {
-            if (input.value.length === 10) {
+            // Ahora permitimos hacer zoom sea cual sea la longitud del código
+            if (input.value.length > 0) {
                 this.classList.toggle('zoomed');
             }
         });
@@ -125,36 +126,29 @@
             input.value = input.value.replace(/[^0-9]/g, ''); 
             const texto = input.value;
 
-            if (texto.length < 10) {
+            if (texto.length === 0) {
                 contenedor.classList.remove('zoomed');
-            }
-
-            if (texto.length === 10) {
-                mensajeError.innerText = '';
-                textoAyuda.classList.add('visible');
-                try {
-                    JsBarcode("#codigoBarras", "\xCF" + texto, {
-                        format: "CODE128", 
-                        text: texto, 
-                        lineColor: "#000",
-                        width: 2,
-                        height: 80,
-                        displayValue: true,
-                        fontSize: 18
-                    });
-                } catch (e) {
-                    console.error("Error al generar el código");
-                }
-            } else {
                 svgElement.innerHTML = '';
                 textoAyuda.classList.remove('visible');
-                
-                if (texto.length > 0) {
-                    const faltan = 10 - texto.length;
-                    mensajeError.innerText = `Faltan ${faltan} números`;
-                } else {
-                    mensajeError.innerText = ''; 
-                }
+                mensajeError.innerText = ''; 
+                return;
+            }
+
+            // Ahora dibuja el código siempre, tenga los números que tenga
+            mensajeError.innerText = '';
+            textoAyuda.classList.add('visible');
+            try {
+                JsBarcode("#codigoBarras", "\xCF" + texto, {
+                    format: "CODE128", 
+                    text: texto, 
+                    lineColor: "#000",
+                    width: 2,
+                    height: 80,
+                    displayValue: true,
+                    fontSize: 14 // Letra un poco más pequeña por si es muy largo
+                });
+            } catch (e) {
+                console.error("Error al generar el código");
             }
         }
 
@@ -188,12 +182,12 @@
                             btnScan.innerText = "📷 Escanear Código";
                             btnScan.style.backgroundColor = "#007aff";
                             
+                            // AVISO EMERGENTE CON LO QUE LEE LA CÁMARA REALMENTE
+                            alert("Lectura bruta de la cámara:\n\n" + decodedText);
+                            
                             let numerosExtraidos = decodedText.replace(/[^0-9]/g, '');
                             
-                            if(numerosExtraidos.length > 10) {
-                                numerosExtraidos = numerosExtraidos.substring(0, 10);
-                            }
-                            
+                            // Ya no hay tijeras: pasamos el código entero a la caja de texto
                             input.value = numerosExtraidos;
                             actualizarCodigo();
                         });
