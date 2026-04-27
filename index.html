@@ -44,9 +44,9 @@
             display: none;
         }
 
-        /* He quitado el límite visual de la caja para que quepan todos los números si es largo */
+        /* Restaurado el tamaño del cajetín */
         input {
-            width: 100%; max-width: 300px; padding: 15px; font-size: 16px;
+            width: 100%; max-width: 300px; padding: 15px; font-size: 20px;
             border: 1px solid #ccc; border-radius: 10px;
             text-align: center; margin-bottom: 10px; outline: none;
             box-sizing: border-box;
@@ -96,7 +96,7 @@
     <button id="btnScan" class="btn-scan">📷 Escanear Código</button>
     <div id="reader"></div>
     
-    <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*">
+    <input type="text" id="inputNumeros" placeholder="Introduce 10 números..." inputmode="numeric" pattern="[0-9]*" maxlength="10">
     
     <div id="mensajeError" class="mensaje"></div>
     
@@ -116,8 +116,7 @@
         const readerDiv = document.getElementById('reader');
 
         contenedor.addEventListener('click', function() {
-            // Ahora permitimos hacer zoom sea cual sea la longitud del código
-            if (input.value.length > 0) {
+            if (input.value.length === 10) {
                 this.classList.toggle('zoomed');
             }
         });
@@ -126,29 +125,37 @@
             input.value = input.value.replace(/[^0-9]/g, ''); 
             const texto = input.value;
 
-            if (texto.length === 0) {
+            if (texto.length < 10) {
                 contenedor.classList.remove('zoomed');
-                svgElement.innerHTML = '';
-                textoAyuda.classList.remove('visible');
-                mensajeError.innerText = ''; 
-                return;
             }
 
-            // Ahora dibuja el código siempre, tenga los números que tenga
-            mensajeError.innerText = '';
-            textoAyuda.classList.add('visible');
-            try {
-                JsBarcode("#codigoBarras", "\xCF" + texto, {
-                    format: "CODE128", 
-                    text: texto, 
-                    lineColor: "#000",
-                    width: 2,
-                    height: 80,
-                    displayValue: true,
-                    fontSize: 14 // Letra un poco más pequeña por si es muy largo
-                });
-            } catch (e) {
-                console.error("Error al generar el código");
+            if (texto.length === 10) {
+                mensajeError.innerText = '';
+                textoAyuda.classList.add('visible');
+                try {
+                    // AQUÍ ESTÁ EL FNC1 (\xCF) Y EL TAMAÑO 18 ORIGINAL RESTAURADO
+                    JsBarcode("#codigoBarras", "\xCF" + texto, {
+                        format: "CODE128", 
+                        text: texto, 
+                        lineColor: "#000",
+                        width: 2,
+                        height: 80,
+                        displayValue: true,
+                        fontSize: 18 // He devuelto esto a 18 para que el grosor coincida
+                    });
+                } catch (e) {
+                    console.error("Error al generar el código");
+                }
+            } else {
+                svgElement.innerHTML = '';
+                textoAyuda.classList.remove('visible');
+                
+                if (texto.length > 0) {
+                    const faltan = 10 - texto.length;
+                    mensajeError.innerText = `Faltan ${faltan} números`;
+                } else {
+                    mensajeError.innerText = ''; 
+                }
             }
         }
 
@@ -182,12 +189,13 @@
                             btnScan.innerText = "📷 Escanear Código";
                             btnScan.style.backgroundColor = "#007aff";
                             
-                            // AVISO EMERGENTE CON LO QUE LEE LA CÁMARA REALMENTE
-                            alert("Lectura bruta de la cámara:\n\n" + decodedText);
-                            
                             let numerosExtraidos = decodedText.replace(/[^0-9]/g, '');
                             
-                            // Ya no hay tijeras: pasamos el código entero a la caja de texto
+                            // Tijeras restauradas: coge solo los primeros 10 números
+                            if(numerosExtraidos.length > 10) {
+                                numerosExtraidos = numerosExtraidos.substring(0, 10);
+                            }
+                            
                             input.value = numerosExtraidos;
                             actualizarCodigo();
                         });
